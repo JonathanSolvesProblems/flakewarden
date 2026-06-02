@@ -3,7 +3,7 @@
 [`flakewarden.process.json`](flakewarden.process.json) is the UiPath Maestro
 process that orchestrates the whole triage flow. It is the single coordination
 layer the hackathon asks for: it ties together a coded service (the deterministic
-scorer), two low-code Agent Builder agents (classifier + healing), an Action Center
+scorer), two low-code Agent Builder agents (classifier + repair), an Action Center
 human task, and Orchestrator write-backs.
 
 ## Flow
@@ -18,7 +18,7 @@ human task, and Orchestrator write-backs.
    Trust Layer (PII redaction + audit log).
 6. **confidence-gate** — verdicts below 0.55 confidence are held for a human and
    default to defect framing.
-7. **heal** — the Healing Agent drafts a selector/sync fix (a proposal, never
+7. **heal** — the Repair Agent drafts a selector/sync fix (a proposal, never
    applied).
 8. **human-review** — a mandatory Action Center approval task with a 24h timer that
    escalates to the lead on timeout.

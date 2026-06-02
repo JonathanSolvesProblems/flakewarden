@@ -76,9 +76,9 @@
     },
     {
       "id": "heal",
-      "name": "Draft selector/sync fix (Healing Agent)",
+      "name": "Draft selector/sync fix (Repair Agent)",
       "type": "agentTask",
-      "agent": "FlakeWarden Healing Agent",
+      "agent": "FlakeWarden Repair Agent",
       "agentDefinition": "../agents/healing_agent.json",
       "next": "human-review"
     },

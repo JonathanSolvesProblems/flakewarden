@@ -14,7 +14,8 @@ Every failure carries two kinds of evidence:
 
 FlakeWarden draws the line between the two explicitly and spends the model only
 where it earns its keep. On the 150-case corpus, the deterministic scorer alone
-resolves ~47% of failures; the classifier is invoked on the rest.
+resolves ~35% of failures (52/150); the grounded classifier is invoked on the
+ambiguous rest.
 
 ## Data flow
 
@@ -36,7 +37,7 @@ flowchart TD
     K -->|flaky| L
     K -->|environment| N[FLAG_ENVIRONMENT]
     K -->|real_defect| M
-    L --> O[Healing Agent drafts fix]
+    L --> O[Repair Agent drafts fix]
     O --> P[Action Center<br/>human review gate]
     J --> P
     M --> P
@@ -101,6 +102,6 @@ repository, and SCM commits.
 | `features.py`, `scorer.py` | A coded service / activity invoked by Maestro |
 | `classifier.py` (Anthropic backend) | Agent Builder **Triage Classifier** agent |
 | `orchestration.py` | **Maestro** process (`maestro/flakewarden.process.json`) |
-| `Action.PROPOSE_HEAL` + Healing Agent | Agent Builder **Healing Agent** + Action Center task |
+| `Action.PROPOSE_HEAL` + Repair Agent | Agent Builder **Repair Agent** (drafts) → optional handoff to UiPath's GA Healing Agent™ + Action Center task |
 | corpus / eval | Agent Builder **evaluation set** + release gate |
 | `seeded_suite/run_history.py` | **Test Manager results API** pull |

@@ -2,7 +2,7 @@
 
 In the live solution this logic is a UiPath Maestro process that coordinates the
 deterministic scorer (a coded service), the Agent Builder classifier agent, the
-Healing Agent, and an Action Center human-review task. Here it is expressed as a
+Repair Agent, and an Action Center human-review task. Here it is expressed as a
 plain pipeline so it is runnable and testable offline; SETUP.md maps each step to
 its Maestro / Test Cloud counterpart.
 
@@ -20,9 +20,31 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Optional
 
+import re
+
 from . import scorer
 from .classifier import Prediction, get_classifier
-from .schema import Label, TestHistory
+from .schema import Label, Outcome, TestHistory
+
+# Wording in commit messages / errors that hints a failure could be a genuine
+# regression rather than flakiness. Used only to DECIDE WHETHER TO DOUBLE-CHECK a
+# flaky-looking failure with the grounded classifier -- never to label on its own.
+_DEFECT_HINT = re.compile(
+    r"refactor|redesign|migrat|feature|rename|rules|validation|"
+    r"assert|expected|mismatch|differs|rejected|regression|incorrect",
+    re.IGNORECASE,
+)
+
+
+def _has_defect_hint(history: TestHistory) -> bool:
+    """True if the grounded context suggests this might be a real regression."""
+    ctx = history.context
+    if ctx.recent_dom_diff.strip():
+        return True
+    if _DEFECT_HINT.search(ctx.commit_message or ""):
+        return True
+    sigs = " ".join(r.error_signature or "" for r in history.runs if r.outcome == Outcome.FAIL)
+    return bool(_DEFECT_HINT.search(sigs))
 
 
 class Action(str, Enum):
@@ -84,8 +106,12 @@ def triage(history: TestHistory, classifier=None) -> TriageDecision:
     """Run one failure through scorer -> (maybe) classifier -> governed action."""
     s = scorer.score(history)
 
-    # Confident deterministic bands resolve without spending the LLM.
-    if s.band == scorer.Band.FLAKY:
+    # Confident-flaky statistics auto-route to a heal proposal -- UNLESS the
+    # grounded context hints at a real regression. A flaky-looking history with a
+    # feature commit / assertion error / selector change is exactly how a real
+    # defect masquerades as flaky, so we never auto-heal it: we double-check with
+    # the grounded classifier. This is the safety contract, not a label oracle.
+    if s.band == scorer.Band.FLAKY and not _has_defect_hint(history):
         fix = "Add an explicit wait synchronizing on the awaited UI state before the assertion."
         return TriageDecision(
             test_id=history.test_id, test_name=history.test_name,

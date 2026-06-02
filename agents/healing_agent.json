@@ -1,6 +1,6 @@
 {
-  "name": "FlakeWarden Healing Agent",
-  "description": "Drafts a selector/synchronization repair for a test that FlakeWarden confirmed flaky. Output is a PROPOSED patch routed to Action Center for human approval. It never commits or promotes a baseline on its own.",
+  "name": "FlakeWarden Repair Agent",
+  "description": "Drafts a selector/synchronization repair for a test that FlakeWarden confirmed flaky. Output is a PROPOSED patch routed to Action Center for human approval. It never commits or promotes a baseline on its own. After approval it can hand off to UiPath's GA Healing Agent for runtime self-healing; this custom agent is distinct from that platform feature.",
   "version": "0.1.0",
   "model": {
     "provider": "anthropic",

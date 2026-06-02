@@ -8,27 +8,42 @@ does *not* yet solve and what production would require.
 - The deterministic scorer, the orchestration/governance logic, the grounded
   classifier interface, the eval harness, and the negative-control gate are all
   real, runnable, and tested.
-- The 95.3% accuracy / 0% safety-false-positive numbers are produced by running the
+- The 90.7% accuracy / 0% safety-false-positive numbers are produced by running the
   pipeline over the corpus, not asserted.
-- The Maestro process and Agent Builder definitions are structured exactly as the
-  deployed solution needs them.
+- The Maestro process and Agent Builder definitions are *illustrative artifacts*
+  structured the way the deployed solution needs them. They are not literal
+  importable files — real Maestro processes and Agent Builder agents are authored in
+  the low-code builders; see [`SETUP.md`](../SETUP.md).
 
 ## What is synthetic
 
-- **The corpus is synthetic-but-adversarial.** `corpus/generate_corpus.py` seeds 150
-  labeled failures with realistic histories and deliberately planted near-boundary
-  cases. A solo builder cannot ship a real enterprise's months of proprietary CI
-  history. The corpus is honest about its construction and is designed so the
-  metrics are not a rigged 100%.
+- **The corpus is synthetic-but-adversarial, and deliberately de-rigged.**
+  `corpus/generate_corpus.py` seeds 150 labeled failures. Two design choices keep
+  the metrics honest rather than circular: (1) `selectors_changed` is a *noisy*
+  signal (only ~65% of real defects carry it; ~10% of flaky tests carry a spurious
+  one), so the deterministic scorer's selector heuristic can be wrong; and (2) the
+  error-message vocabulary is *decoupled* from the classifier's keyword patterns
+  (paraphrased surface forms, with some wording deliberately outside the classifier
+  vocabulary), so accuracy reflects semantic overlap, not string identity. ~6 of the
+  real defects are *conflict cases* whose statistics look flaky and which only the
+  grounded classifier can catch. That is why the accuracy is 90.7%, not 100%.
+- **The 0% safety rate is enforced by a mechanism, not the data.** Real defects with
+  no selector fingerprint are routed to the classifier, which tie-breaks toward
+  *real defect* on split evidence; flaky-looking histories with any regression hint
+  are double-checked rather than auto-healed. Remove those mechanisms and the rate
+  rises — it is earned, not planted.
 - **The offline classifier is rule-based.** It genuinely reads the grounded context
   (not the label), but it is a baseline. The live Agent Builder / Claude classifier
   is expected to do better on long-tail ambiguous cases; that should be measured,
   not assumed.
+- **The UiPath platform pieces are not yet deployed.** The orchestration runs as a
+  Python reimplementation of the Maestro flow; deploying to a real tenant and
+  capturing it is the top remaining task (see [`SETUP.md`](../SETUP.md)).
 
 ## What production requires
 
-1. **Live data.** Connect the Test Manager results API (`uip testcloud
-   export-history`) instead of the seeded suite. The downstream pipeline is
+1. **Live data.** Connect the Test Manager results API (via the `uip tm` tool /
+   Test Manager APIs) instead of the seeded suite. The downstream pipeline is
    unchanged.
 2. **A gold-standard labeled set.** Have QA leads label a few hundred real failures
    to replace the synthetic corpus, then re-measure accuracy and the safety

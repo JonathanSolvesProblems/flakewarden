@@ -32,72 +32,72 @@ python -m flakewarden.cli triage seeded_suite/history.jsonl
 
 ## Path B — deploy on UiPath Automation Cloud
 
-The whole flow below is driven by **Claude Code + the `uip` CLI** (this is the
-UiPath for Coding Agents bonus). The transcript in
-[`docs/coding-agents.md`](docs/coding-agents.md) shows the exact prompts.
+The flow below is driven by **Claude Code + the `uip` CLI** (UiPath for Coding
+Agents). [`docs/coding-agents.md`](docs/coding-agents.md) shows the prompts.
 
-### 1. Install the CLI and skills
+> **Verify commands against your CLI version.** UiPath's CLI is `uip`
+> (`@uipath/cli`). Subcommands evolve; run `uip --help` and `uip <tool> --help` to
+> confirm flags. The commands below use the real tool names (`login`, `skills`,
+> `agent`, `maestro`, `solution`, `tm`, `rpa`, `codedagent`) but exact flags may
+> differ on your tenant. The Maestro process JSON and Agent Builder JSON in this
+> repo are **illustrative artifacts** — real agents and processes are authored in
+> the low-code builders (Agent Builder / the Maestro BPMN designer) and then
+> packed/published with the CLI, not hand-imported from these files.
+
+### 1. Install the CLI and the coding-agent skills
 
 ```bash
 npm install -g @uipath/cli
-uip auth login                          # opens browser; pick your Labs tenant
-uip skills add uipath-test uipath-agents uipath-solution uipath-platform
+uip login                                # opens browser; pick your Labs tenant
+uip skills install --agent claude        # installs the UiPath skills for Claude Code
 ```
 
-### 2. Connect the data source (Test Cloud / Test Manager)
+### 2. Author the Agent Builder agents
+
+Create the **Triage Classifier** and **Repair Agent** in Agent Builder. Use
+[`agents/classifier_prompt.txt`](agents/classifier_prompt.txt) as the system
+prompt and the schemas/guardrails in [`agents/*.json`](agents/) as the spec.
+Configure inside Agent Builder: **Context Grounding** indexes over Test Manager
+results, the object repository, and SCM commits; the **output schema**; and an
+**evaluation set** loaded from `corpus/failures.jsonl` with the release gate
+`safety_false_positive_rate == 0` and `accuracy >= 0.88`. Then publish:
 
 ```bash
-uip testcloud connect --tenant <your-tenant>
-# Register the trigger that fires the Maestro process on a failed run:
-uip testcloud trigger create \
-    --event run.completed \
-    --filter "result.failedCount > 0" \
-    --target "FlakeWarden Triage"
+uip agent publish                        # publish the agent package to the tenant
 ```
 
-### 3. Publish the Agent Builder agents
+### 3. Register the deterministic scorer as a coded agent/activity
 
-The agent definitions live in [`agents/`](agents/). Import them and wire the
-grounded sources:
+The scorer and orchestration are plain Python, packaged as a coded agent:
 
 ```bash
-uip agents import agents/classifier_agent.json
-uip agents import agents/healing_agent.json
-uip agents ground "FlakeWarden Triage Classifier" \
-    --source test-manager-results --source object-repository-diffs --source scm-commits
-# Attach the evaluation set + release gate (eval-driven development):
-uip agents eval set "FlakeWarden Triage Classifier" \
-    --dataset corpus/failures.jsonl \
-    --gate "safety_false_positive_rate==0.0" --gate "accuracy>=0.90"
+uip codedagent init flakewarden          # scaffold a coded-agent project
+# entrypoints: flakewarden.scorer:score and flakewarden.orchestration:triage
+uip codedagent publish
 ```
 
-### 4. Register the deterministic scorer as a coded activity
+### 4. Author the Maestro process
+
+Recreate [`maestro/flakewarden.process.json`](maestro/flakewarden.process.json) in
+the Maestro BPMN designer: the deterministic scorer (coded agent) → routing
+gateway → Triage Classifier (agent task) → Repair Agent → Action Center user task
+with a 24h escalation timer → governed write-back. Configure the start trigger to
+fire on a Test Cloud run with failures.
+
+### 5. Validate, pack, publish, deploy
 
 ```bash
-uip solution add-coded flakewarden/   --entry flakewarden.scorer:score
-uip solution add-coded flakewarden/   --entry flakewarden.orchestration:triage
+uip rpa analyze ./flakewarden            # Workflow Analyzer — fix findings before packing
+uip solution pack    --output ./FlakeWarden.zip
+uip solution publish ./FlakeWarden.zip
+uip solution deploy run "FlakeWarden Triage" --folder Shared
 ```
 
-### 5. Import the Maestro process
+> In the demo video, step 5 is where the coding-agent build loop shows: `uip rpa
+> analyze` reports a finding, Claude Code fixes it, and the re-run passes — capture
+> a **real** session here (see the note in `docs/coding-agents.md`).
 
-```bash
-uip maestro import maestro/flakewarden.process.json
-```
-
-### 6. Validate, pack, publish, deploy
-
-```bash
-uip analyze                              # Workflow Analyzer — fix any findings before packing
-uip solution pack    --output ./FlakeWarden.nupkg
-uip solution publish ./FlakeWarden.nupkg --feed orchestrator
-uip run deploy "FlakeWarden Triage" --folder Shared
-```
-
-> In the demo video, step 6 includes a moment where `uip analyze` reports a
-> Workflow Analyzer finding, Claude Code fixes it, and the re-run passes — this
-> shows the coding-agent build loop, not just a green run.
-
-### 7. Configure the human gate
+### 6. Configure the human gate
 
 In Action Center, assign the **"FlakeWarden: review proposed test change"** queue
 to your QA reviewers. No quarantine, heal, or baseline promotion executes until a
@@ -105,12 +105,7 @@ reviewer approves the task.
 
 ## Replacing synthetic data with real Test Cloud history
 
-For a production accuracy study, point the corpus loader at a real export:
-
-```bash
-uip testcloud export-history --window 15 --only-failing --out corpus/failures.jsonl
-# then label a sample and re-run:
-python eval/harness.py
-```
-
-See [`docs/limitations.md`](docs/limitations.md) for the prospective-study plan.
+For a production accuracy study, export real failing-test history via the `uip tm`
+tool / Test Manager APIs into the same JSONL shape as `corpus/failures.jsonl`, have
+QA leads label a sample, then re-run `python eval/harness.py`. See
+[`docs/limitations.md`](docs/limitations.md) for the prospective-study plan.

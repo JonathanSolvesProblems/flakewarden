@@ -15,10 +15,14 @@ One-line: "Real defect, flaky, or environment? With a human in charge of every c
 
 ## Slide 3 — The idea *(Creativity)*
 - Triage every failure into real_defect / flaky / environment and route it.
-- Uniqueness claim: *"A deterministic statistical flake-scorer + a grounded
-  generative classifier that separates real defects from false positives with a
-  measured false-positive rate, plus governed human-gated self-healing in Maestro —
-  nothing else combines all four."*
+- Uniqueness claim (defensible version): *"Detection tools tell you a test is flaky;
+  healing tools auto-repair selectors. FlakeWarden is the governance layer between
+  them: a reproducible, auditable scorer that spends an LLM only on the ambiguous
+  band, under a hard safety contract — a real regression is never auto-quarantined
+  as flaky — with every fix a human-gated proposal written back through UiPath, not
+  an autonomous mutation."*
+- Position vs prior art explicitly (see [`prior-art.md`](prior-art.md)); the moat is
+  the *composition + safety contract*, not any single component.
 
 ## Slide 4 — Architecture *(Technical Execution)*
 - The mermaid diagram from the README.
@@ -32,8 +36,10 @@ One-line: "Real defect, flaky, or environment? With a human in charge of every c
 - Coded scorer + low-code agents, both shown.
 
 ## Slide 6 — Measured results *(Technical Execution / Business Impact)*
-- 95.3% accuracy · **0% safety false-positive rate** · 6% noise (safe direction).
-- 70/150 resolved deterministically (LLM spent only where it helps).
+- 90.7% accuracy · **0% safety false-positive rate** · 12% noise (safe direction).
+- 52/150 resolved deterministically; the grounded classifier carries the other 98.
+- Say it first: "measured on a synthetic-but-adversarial corpus; the 0% is enforced
+  by a mechanism (tie-break-to-defect + flaky-band guard), not planted in the data."
 - "These are run, not claimed — `python eval/harness.py`."
 
 ## Slide 7 — Governance & the human gate *(Business Impact / Technical Execution)*
@@ -44,8 +50,9 @@ One-line: "Real defect, flaky, or environment? With a human in charge of every c
 
 ## Slide 8 — Built with a coding agent *(Platform Usage — bonus)*
 - Claude Code + uip CLI built, validated (Workflow Analyzer), packed, deployed.
-- The 70%→95.3% fix that the eval loop surfaced — shows real engineering, not a
-  one-shot generation.
+- The eval loop caught a real design flaw (environment failures auto-classified as
+  defects, 70%→90.7%) AND a self-review caught a circular-corpus problem that was
+  then fixed — shows real engineering and honest methodology, not a one-shot gen.
 
 ## Slide 9 — Honest limitations & path to production *(Business Impact / feasibility)*
 - Synthetic-but-adversarial corpus; live Test Manager API + gold-standard labels +
@@ -57,5 +64,9 @@ One-line: "Real defect, flaky, or environment? With a human in charge of every c
 
 ## Delivery notes
 - Lead every technical slide with the *why*, then the *how*.
-- Quote the 0% safety false-positive rate at least twice; it's the trust anchor.
+- The 0% safety false-positive rate is the trust anchor — but every time you say it,
+  pair it with "on a synthetic corpus, enforced by a mechanism" so a judge can't
+  frame it as overclaiming before you do.
+- Pre-empt "isn't this just Healenium / Tricentis / UiPath Autopilot?" with the
+  three-beat rebuttal in [`prior-art.md`](prior-art.md). Don't wait to be asked.
 - Keep jargon grounded — define "flaky" and "environment failure" once, early.

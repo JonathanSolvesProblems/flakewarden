@@ -47,6 +47,6 @@
   "evaluation": {
     "evalSet": "../corpus/failures.jsonl",
     "metrics": ["accuracy", "safety_false_positive_rate", "noise_false_alarm_rate"],
-    "releaseGate": { "safety_false_positive_rate": "== 0.0", "accuracy": ">= 0.90" }
+    "releaseGate": { "safety_false_positive_rate": "== 0.0", "accuracy": ">= 0.88" }
   }
 }

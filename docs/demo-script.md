@@ -22,9 +22,12 @@ Show the architecture diagram (README mermaid) for 8 seconds.
 > ambiguous middle."
 
 Live: `python eval/harness.py`. Point at the screen:
-- **95.3% accuracy**
-- **0% safety false-positive rate** ("a real regression is never hidden")
-- "70 of 150 resolved by the deterministic scorer, no LLM spent."
+- **90.7% accuracy on a 150-case corpus** (say out loud: "synthetic, here's the
+  production validation plan" — get ahead of it).
+- **0% safety false-positive rate** ("a real regression is never hidden — and that's
+  enforced by a mechanism, not the data").
+- "52 of 150 resolved by the deterministic scorer with no LLM; the grounded
+  classifier earns its keep on the other 98."
 
 ## 1:10–2:30 — Run it on UiPath
 
@@ -42,7 +45,7 @@ Switch to Automation Cloud.
 ## 2:30–3:30 — The human gate (where humans fit)
 
 1. Open **Action Center**: the "review proposed test change" task.
-2. Show the flaky verdict, the Healing Agent's **proposed** selector fix, the
+2. Show the flaky verdict, the Repair Agent's **proposed** selector fix, the
    rationale, the flake score.
 3. **Reject** one to prove nothing auto-applies, then **approve** another, and show
    Orchestrator performing the governed write-back (quarantine / baseline promote).

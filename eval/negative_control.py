@@ -26,7 +26,12 @@ from flakewarden.orchestration import Action, triage  # noqa: E402
 from flakewarden.schema import CorpusCase, Label  # noqa: E402
 
 CORPUS = os.path.join(os.path.dirname(__file__), "..", "corpus", "failures.jsonl")
-HEAL_OR_QUARANTINE = {Action.PROPOSE_HEAL}
+
+# A real defect is HIDDEN if it is routed anywhere that suppresses it instead of
+# surfacing it: a heal proposal (treated as flaky) or an environment re-run. Only
+# escalation or an explicit human hold count as safe.
+SAFE_ACTIONS = {Action.ESCALATE_DEFECT, Action.HOLD_FOR_REVIEW}
+HIDING_ACTIONS = {Action.PROPOSE_HEAL, Action.FLAG_ENVIRONMENT}
 
 
 def load(path):
@@ -36,36 +41,46 @@ def load(path):
 
 def main() -> int:
     cases = load(CORPUS)
-    violations = []
+    hard_violations = []   # must be zero -- these gate the build
+    safety_misses = []     # measured; a real defect that was hidden
 
     for c in cases:
         d = triage(c)
 
-        # Invariant 1: a real defect must never be sent to heal/quarantine.
-        if c.label == Label.REAL_DEFECT and d.action in HEAL_OR_QUARANTINE:
-            violations.append(f"SAFETY: real defect {c.test_id} routed to {d.action.value}")
-
-        # Invariant 2: any heal proposal must require human approval.
+        # HARD invariant 1: a heal is never auto-applied -- it always needs a human.
         if d.action == Action.PROPOSE_HEAL and not d.requires_human_approval:
-            violations.append(f"AUTO-APPLY: {c.test_id} would heal without human approval")
+            hard_violations.append(f"AUTO-APPLY: {c.test_id} would heal without human approval")
+
+        # HARD invariant 2: a real defect is never routed to a heal proposal
+        # (treated as flaky). This is the worst failure mode and must be zero.
+        if c.label == Label.REAL_DEFECT and d.action == Action.PROPOSE_HEAL:
+            hard_violations.append(f"HEAL-A-DEFECT: real defect {c.test_id} routed to propose_heal")
+
+        # MEASURED: any real defect not surfaced (healed OR sent to env re-run).
+        if c.label == Label.REAL_DEFECT and d.action in HIDING_ACTIONS:
+            safety_misses.append((c.test_id, d.action.value))
 
     n_real = sum(1 for c in cases if c.label == Label.REAL_DEFECT)
-    n_real_escalated = sum(1 for c in cases
-                           if c.label == Label.REAL_DEFECT
-                           and triage(c).action in {Action.ESCALATE_DEFECT, Action.HOLD_FOR_REVIEW})
+    miss_rate = len(safety_misses) / n_real if n_real else 0.0
 
     print("Negative-control checks")
-    print("-" * 40)
-    print(f"real defects in corpus:                 {n_real}")
-    print(f"real defects escalated / held (safe):   {n_real_escalated}/{n_real}")
-    print(f"real defects auto-healed (must be 0):   {n_real - n_real_escalated}")
+    print("-" * 48)
+    print(f"real defects in corpus:                      {n_real}")
+    print(f"real defects surfaced (escalated/held):      {n_real - len(safety_misses)}/{n_real}")
+    print(f"safety-direction misses (hidden):            {len(safety_misses)} = {miss_rate*100:.1f}%")
+    for tid, act in safety_misses:
+        print(f"    - {tid} -> {act}")
+    print(f"HARD invariants (must be 0 to pass):         {len(hard_violations)}")
 
-    if violations:
-        print("\nFAILED. Invariant violations:")
-        for v in violations:
+    if hard_violations:
+        print("\nFAILED. Hard-invariant violations:")
+        for v in hard_violations:
             print(f"  - {v}")
         return 1
-    print("\nPASSED. No real defect was hidden; no heal bypassed the human gate.")
+    print("\nPASSED. No real defect was auto-healed and no heal bypassed the human gate.")
+    if safety_misses:
+        print(f"NOTE: {len(safety_misses)} real defect(s) were routed to an environment re-run "
+              "(visible/recoverable, not silently closed). Tracked as the measured safety-miss rate.")
     return 0
 
 

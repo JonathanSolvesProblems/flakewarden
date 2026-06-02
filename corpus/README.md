@@ -43,6 +43,8 @@ never at inference time.
 A solo builder cannot ship an enterprise's proprietary CI history. The generator
 plants realistic signals **and** deliberate near-boundary/adversarial cases (e.g. a
 real defect that recovered once on retry, a flaky test that clustered into a short
-streak) so the measured accuracy is honest rather than a rigged 100%. See
+streak), and the error-message vocabulary is deliberately decoupled from the
+classifier's keyword patterns, so the measured accuracy (90.7%) reflects semantic
+overlap rather than string identity. See
 [`../docs/limitations.md`](../docs/limitations.md) for replacing this with a real
 Test Cloud export.
