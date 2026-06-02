@@ -1,0 +1,125 @@
+{
+  "$schema": "https://cloud.uipath.com/schemas/maestro/process/v1.json",
+  "name": "FlakeWarden Triage",
+  "description": "Orchestrates flaky-test triage: deterministic scorer -> grounded classifier -> healing agent -> human-review gate. Long-running, resumable, with a mandatory Action Center approval before any write-back.",
+  "version": "0.1.0",
+  "trigger": {
+    "type": "event",
+    "source": "uipath.testcloud.run.completed",
+    "filter": "result.failedCount > 0"
+  },
+  "variables": {
+    "failingTests": { "type": "array" },
+    "decisions": { "type": "array" }
+  },
+  "steps": [
+    {
+      "id": "pull-history",
+      "name": "Pull failing-test history",
+      "type": "serviceTask",
+      "implementation": "uipath.testmanager.getExecutionHistory",
+      "inputs": { "window": 15, "onlyFailing": true },
+      "output": "failingTests",
+      "retry": { "maxAttempts": 3, "backoff": "exponential" }
+    },
+    {
+      "id": "score-loop",
+      "name": "Score each failure (deterministic)",
+      "type": "parallelForEach",
+      "collection": "failingTests",
+      "body": {
+        "id": "flake-score",
+        "type": "serviceTask",
+        "implementation": "coded:flakewarden.scorer.score",
+        "comment": "Auditable statistics. No LLM. Emits band: flaky | real_defect | ambiguous."
+      }
+    },
+    {
+      "id": "route",
+      "name": "Route by band",
+      "type": "exclusiveGateway",
+      "branches": [
+        {
+          "condition": "band == 'flaky'",
+          "next": "heal"
+        },
+        {
+          "condition": "band == 'real_defect' && selectorChangeAtBreak",
+          "next": "escalate"
+        },
+        {
+          "condition": "default",
+          "next": "classify"
+        }
+      ]
+    },
+    {
+      "id": "classify",
+      "name": "Classify ambiguous failure (grounded agent)",
+      "type": "agentTask",
+      "agent": "FlakeWarden Triage Classifier",
+      "agentDefinition": "../agents/classifier_agent.json",
+      "grounding": ["test-manager-results", "object-repository-diffs", "scm-commits"],
+      "trustLayer": { "piiRedaction": true, "auditLog": true },
+      "next": "confidence-gate"
+    },
+    {
+      "id": "confidence-gate",
+      "name": "Confidence gate",
+      "type": "exclusiveGateway",
+      "branches": [
+        { "condition": "confidence < 0.55", "next": "hold" },
+        { "condition": "label == 'flaky'", "next": "heal" },
+        { "condition": "label == 'environment'", "next": "flag-env" },
+        { "condition": "default", "next": "escalate" }
+      ]
+    },
+    {
+      "id": "heal",
+      "name": "Draft selector/sync fix (Healing Agent)",
+      "type": "agentTask",
+      "agent": "FlakeWarden Healing Agent",
+      "agentDefinition": "../agents/healing_agent.json",
+      "next": "human-review"
+    },
+    {
+      "id": "human-review",
+      "name": "Action Center: review proposed change",
+      "type": "userTask",
+      "implementation": "uipath.actioncenter.createApprovalTask",
+      "inputs": {
+        "title": "FlakeWarden: review proposed test change",
+        "fields": ["test_name", "label", "flake_score", "rationale", "proposed_fix"],
+        "actions": ["approve", "reject", "edit"]
+      },
+      "timer": { "duration": "PT24H", "onTimeout": "escalate-to-lead" },
+      "next": "apply"
+    },
+    {
+      "id": "apply",
+      "name": "Apply approved change (governed write-back)",
+      "type": "serviceTask",
+      "implementation": "uipath.orchestrator.applyTestChange",
+      "comment": "Quarantine, promote baseline, or open a defect. Only runs after human approval.",
+      "guard": "humanReview.outcome == 'approve'"
+    },
+    {
+      "id": "escalate",
+      "name": "Open / keep defect; notify owning team",
+      "type": "serviceTask",
+      "implementation": "uipath.testmanager.openDefect"
+    },
+    {
+      "id": "flag-env",
+      "name": "Re-run on clean infra; notify platform team",
+      "type": "serviceTask",
+      "implementation": "uipath.orchestrator.requeueOnCleanAgent"
+    },
+    {
+      "id": "hold",
+      "name": "Low confidence -> hold for human (default to defect framing)",
+      "type": "userTask",
+      "implementation": "uipath.actioncenter.createApprovalTask"
+    }
+  ]
+}

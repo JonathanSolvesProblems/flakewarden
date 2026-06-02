@@ -1,0 +1,11 @@
+# Core FlakeWarden runs on the Python standard library only — no deps required
+# for the deterministic scorer, the offline classifier, the eval harness, or the
+# negative-control gate.
+
+# Optional: enables the live grounded classifier backend (AnthropicClassifier).
+# Only needed if you set ANTHROPIC_API_KEY and want the LLM to handle the
+# ambiguous band locally. The deployed solution uses UiPath Agent Builder instead.
+anthropic>=0.40.0 ; extra == "llm"
+
+# Optional: running the unit tests.
+pytest>=8.0 ; extra == "dev"

@@ -1,0 +1,52 @@
+{
+  "name": "FlakeWarden Triage Classifier",
+  "description": "Classifies an ambiguous test failure as real_defect, flaky, or environment, grounded in Test Manager evidence. Invoked by the Maestro process only for failures the deterministic scorer could not confidently bucket.",
+  "version": "0.1.0",
+  "model": {
+    "provider": "anthropic",
+    "name": "claude-opus-4-8",
+    "temperature": 0,
+    "maxTokens": 1024
+  },
+  "systemPromptFile": "classifier_prompt.txt",
+  "inputs": {
+    "type": "object",
+    "required": ["test_name", "stack_trace"],
+    "properties": {
+      "test_name": { "type": "string" },
+      "stack_trace": { "type": "string" },
+      "recent_dom_diff": { "type": "string" },
+      "commit_message": { "type": "string" },
+      "runner_logs": { "type": "string" }
+    }
+  },
+  "contextGrounding": {
+    "description": "Hybrid RAG over the failure's trusted artifacts. The agent retrieves, it does not free-associate.",
+    "sources": [
+      { "name": "test-manager-results", "type": "uipath.testmanager", "scope": "failing-test-window" },
+      { "name": "object-repository-diffs", "type": "uipath.objectrepository", "scope": "since-last-green" },
+      { "name": "scm-commits", "type": "git", "scope": "first-red-commit" }
+    ]
+  },
+  "outputSchema": {
+    "type": "object",
+    "required": ["label", "confidence", "rationale"],
+    "properties": {
+      "label": { "type": "string", "enum": ["real_defect", "flaky", "environment"] },
+      "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+      "rationale": { "type": "string" },
+      "proposed_fix": { "type": ["string", "null"] }
+    }
+  },
+  "guardrails": {
+    "default_on_uncertainty": "real_defect",
+    "min_confidence_for_autonomous_action": 0.55,
+    "never_auto_apply_fix": true,
+    "trust_layer": "UiPath AI Trust Layer (PII redaction + audit logging enabled)"
+  },
+  "evaluation": {
+    "evalSet": "../corpus/failures.jsonl",
+    "metrics": ["accuracy", "safety_false_positive_rate", "noise_false_alarm_rate"],
+    "releaseGate": { "safety_false_positive_rate": "== 0.0", "accuracy": ">= 0.90" }
+  }
+}

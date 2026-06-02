@@ -1,0 +1,41 @@
+{
+  "name": "FlakeWarden Healing Agent",
+  "description": "Drafts a selector/synchronization repair for a test that FlakeWarden confirmed flaky. Output is a PROPOSED patch routed to Action Center for human approval. It never commits or promotes a baseline on its own.",
+  "version": "0.1.0",
+  "model": {
+    "provider": "anthropic",
+    "name": "claude-opus-4-8",
+    "temperature": 0,
+    "maxTokens": 1500
+  },
+  "systemPrompt": "You repair flaky UI test steps. Given a flaky test's failing locator and the classifier's proposed remedy, produce a minimal, reviewable patch: replace brittle locators with stable ones, add explicit waits synchronizing on the awaited application state, and remove implicit sleeps. Output a unified diff plus a one-paragraph explanation. Change as little as possible. You are drafting for a human reviewer; you do not apply changes.",
+  "inputs": {
+    "type": "object",
+    "required": ["test_name", "failing_locator", "proposed_fix"],
+    "properties": {
+      "test_name": { "type": "string" },
+      "failing_locator": { "type": "string" },
+      "proposed_fix": { "type": "string" },
+      "object_repository_excerpt": { "type": "string" }
+    }
+  },
+  "contextGrounding": {
+    "sources": [
+      { "name": "object-repository", "type": "uipath.objectrepository", "scope": "test-under-repair" }
+    ]
+  },
+  "outputSchema": {
+    "type": "object",
+    "required": ["patch_diff", "explanation", "risk"],
+    "properties": {
+      "patch_diff": { "type": "string" },
+      "explanation": { "type": "string" },
+      "risk": { "type": "string", "enum": ["low", "medium", "high"] }
+    }
+  },
+  "guardrails": {
+    "never_auto_apply_fix": true,
+    "human_gate": "Action Center approval task (mandatory)",
+    "baseline_promotion": "only a human reviewer can promote the repaired test to the new baseline"
+  }
+}

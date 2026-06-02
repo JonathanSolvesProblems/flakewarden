@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+
+# Generated artifacts (regenerate with the scripts; safe to commit if you prefer)
+seeded_suite/history.jsonl
+
+# Local env / secrets
+.env
+*.local
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/

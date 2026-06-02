@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "flakewarden"
+version = "0.1.0"
+description = "Agentic flaky-test triage and self-healing reviewer for UiPath Test Cloud"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
+authors = [{ name = "Jonathan" }]
+dependencies = []
+
+[project.optional-dependencies]
+llm = ["anthropic>=0.40.0"]
+dev = ["pytest>=8.0"]
+
+[project.scripts]
+flakewarden = "flakewarden.cli:main"
+
+[tool.setuptools]
+packages = ["flakewarden"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# Tests are plain functions; don't try to collect domain dataclasses named Test*.
+python_classes = []
