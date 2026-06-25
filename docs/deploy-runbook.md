@@ -129,6 +129,55 @@ Agent. Keep it behind the human gate.
 - [ ] `uip` CLI build/analyze/deploy loop (Step 5)
 - [ ] Local `python eval/harness.py` (90.7% / 0% safety) and `negative_control.py`
 
+## Reference links per step
+
+Official docs/entry points. Deep links can shift between platform releases; if one
+404s, start at `https://docs.uipath.com` and search the title.
+
+**Pre-flight (units & services)**
+- Automation Cloud admin / licensing: https://docs.uipath.com/automation-cloud/automation-cloud/latest/admin-guide
+- AI Trust Layer (models, governance): https://docs.uipath.com/automation-cloud/automation-cloud/latest/admin-guide/about-ai-trust-layer
+
+**Step 1 — Agent Builder (Triage Classifier)**
+- Build an agent in Studio Web: https://docs.uipath.com/agents/automation-cloud/latest/user-guide/building-an-agent-in-studio-web
+- Agent evaluations (eval sets + gates): https://docs.uipath.com/agents/automation-cloud/latest/user-guide/evaluations-agent-builder
+- Context Grounding (hybrid RAG): https://docs.uipath.com/automation-cloud/automation-cloud/latest/admin-guide/about-context-grounding
+- Webinar recording — "Connector Corner: Agent Builder: Create, test, and deploy enterprise AI agents" (May 27, in the AgentHack resources hub)
+
+**Step 2 — Test Cloud / Test Manager**
+- Test Cloud product: https://www.uipath.com/product/test-cloud
+- How Test Cloud enables agentic QA (framing for the pitch): https://www.uipath.com/blog/product-and-updates/how-uipath-test-cloud-paves-way-for-agentic-autonomous-qa
+- Autopilot for Testers: https://www.uipath.com/platform/agentic-testing/autopilot-for-testers
+- Test Manager docs: https://docs.uipath.com/test-manager
+
+**Step 3 — Coded Agents (Python SDK)**
+- UiPath CLI on npm: https://www.npmjs.com/package/@uipath/cli
+- CLI command reference: https://docs.uipath.com/uipath-cli/standalone/latest/user-guide/command-reference
+- Coding agents with the CLI: https://docs.uipath.com/uipath-cli/standalone/latest/user-guide/coding-agents
+- Webinar recording — "Dev Dives: Empower coding agents to enhance the RPA SDLC" (May 28)
+
+**Step 4 — Maestro + Action Center**
+- Maestro docs hub: https://docs.uipath.com/maestro
+- Maestro overview: https://docs.uipath.com/maestro/automation-cloud/latest/user-guide/overview
+- Understanding process implementation: https://docs.uipath.com/maestro/automation-cloud/latest/user-guide/understanding-process-implementation
+- Introducing Maestro Case (blog): https://www.uipath.com/blog/product-and-updates/introducing-maestro-case-new-uipath-capability
+- Action Center product: https://www.uipath.com/product/action-center
+- Action Center app tasks & agents: https://docs.uipath.com/action-center/automation-cloud/latest/user-guide/quick-start-guide-for-app-actions-and-agents
+- Webinar — "Connector Corner: UiPath Maestro: Enterprise Orchestration with Case Management" (June 23)
+
+**Step 5 — UiPath for Coding Agents (the bonus)**
+- uip solution pack: https://docs.uipath.com/uipath-cli/standalone/latest/user-guide/uip-solution-pack
+- uip solution publish: https://docs.uipath.com/uipath-cli/standalone/latest/user-guide/uip-solution-publish
+- UiPath skills for coding agents (GitHub): https://github.com/UiPath/skills
+- Webinar — "Dev Dives: Troubleshoot any automation failure with UiPath for Coding Agents" (June 25)
+
+**Step 6 — Repair / Healing**
+- UiPath Healing Agent (the GA platform feature): https://docs.uipath.com/agents/automation-cloud/latest/user-guide-ha/what-is-healing-agent
+
+**General ramp-up**
+- UiPath Academy: https://academy.uipath.com
+- UiPath Python SDK + samples (GitHub): https://github.com/UiPath
+
 ## Fallback if access is delayed past day 3
 
 Ship Step 1 only (the classifier agent running live on the platform) + the local
