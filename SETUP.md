@@ -32,6 +32,10 @@ python -m flakewarden.cli triage seeded_suite/history.jsonl
 
 ## Path B — deploy on UiPath Automation Cloud
 
+> Working against the AgentHack deadline? Follow the time-boxed, priority-ordered
+> [`docs/deploy-runbook.md`](docs/deploy-runbook.md) instead — it includes a
+> pre-flight units/license check and a stop-and-demo ladder.
+
 The flow below is driven by **Claude Code + the `uip` CLI** (UiPath for Coding
 Agents). [`docs/coding-agents.md`](docs/coding-agents.md) shows the prompts.
 
