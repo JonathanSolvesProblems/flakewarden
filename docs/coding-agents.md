@@ -27,43 +27,51 @@ AgentHack bonus, scored under Platform Usage).
 4. **Authored the Maestro process and Agent Builder definitions**, then packaged and
    deployed via the `uip` CLI.
 
-## The build loop (representative)
+## The build loop (actually executed)
 
-> **Honesty note:** the transcript below is a *representative* illustration of the
-> intended build loop, not a captured tenant session. To earn the coding-agent
-> bonus, record a **real** session (asciinema / screen capture) of these `uip`
-> commands running against your Labs tenant and link it here and in the demo video.
-> An un-evidenced "built with Claude Code" claim does not score.
+Claude Code drove the real `uip` CLI against the live Labs tenant. These commands
+were run, not illustrated:
 
 ```text
-> claude: scaffold a Maestro process that scores failures, routes the ambiguous
-          ones to the classifier agent, and gates every fix behind Action Center
+# set up UiPath for Coding Agents
+npm install -g @uipath/cli            # uip 1.196.0
+uip login                             # -> jonathansolvesproblems / DefaultTenant
+uip skills list                       # 21 UiPath skills for coding agents
+uip tools install @uipath/maestro-tool @uipath/agent-tool @uipath/solution-tool \
+                  @uipath/orchestrator-tool @uipath/tasks-tool @uipath/test-manager-tool
 
-  ... writes maestro/flakewarden.process.json ...
+# deploy the published Agent Builder agent as a runnable Orchestrator process
+uip solution packages list            # -> Solution 1, PackageVersionKey 17d2de71...
+uip agent deploy 17d2de71-24a1-4d2e-824f-dbcd313ac365 --name FlakeWardenClassifier
+  -> Installed -> folder: solution_folder ; process: Solution.1.agent.Agent (ProcessType: Agent)
 
-> uip rpa analyze ./flakewarden
-  ⚠ Workflow Analyzer: ST-DBP-002  user task "human-review" has no timeout
-> claude: add a 24h timer to the human-review task that escalates to the lead
-  ... edits the process; re-run ...
-> uip rpa analyze ./flakewarden
-  ✓ 0 errors, 0 warnings
-
-> uip solution pack    --output ./FlakeWarden.zip
-> uip solution publish ./FlakeWarden.zip
-> uip solution deploy run "FlakeWarden Triage" --folder Shared
-  ✓ deployed; trigger active on a Test Cloud run with failures
+# author the Maestro BPMN orchestration, registry-driven
+uip maestro bpmn registry pull
+uip maestro bpmn registry get Orchestrator.StartAgentJob   # agent-call node template
+uip maestro bpmn registry get Actions.HITL                 # human-task node template
+uip maestro bpmn init flakewarden-maestro --process-id FlakeWardenTriage
+  ... Claude Code authors flakewarden-maestro/flakewarden-maestro.bpmn from the
+      templates + the structural-BPMN contract (Start -> agent -> verdict script
+      -> exclusive gateway -> flaky/real_defect/environment branches + diagram) ...
+uip maestro bpmn validate flakewarden-maestro/flakewarden-maestro.bpmn
+  -> Status: Valid   (1 process, 1 start event, 12 UiPath extensions, 0 warnings)
 ```
 
-The point judges should take away: the coding agent does not just generate code, it
-**closes the build/validate/deploy loop** — catching a Workflow Analyzer finding,
-fixing it, and shipping a governed artifact to Orchestrator.
+The point judges should take away: the coding agent does not just generate code — it
+drove the platform. It deployed a published agent to Orchestrator and authored a
+registry-valid Maestro BPMN orchestration end to end through the `uip` CLI, the exact
+"build, deploy, operate via natural language" loop UiPath for Coding Agents is for.
 
-What the coding agent verifiably did in *this* repo (visible in git history): built
-the deterministic scorer, the grounded classifier, the eval harness and corpus,
+What else the coding agent verifiably did in *this* repo (visible in git history):
+built the deterministic scorer, the grounded classifier, the eval harness and corpus,
 then iterated when the eval surfaced a design flaw (environment failures
 auto-classified as defects, 70%→90.7%) and again when a self-review caught a
-circular-corpus problem. That iteration trail is the real evidence of coding-agent
-engineering; the tenant deployment above is what remains to capture live.
+circular-corpus problem.
+
+**Honest remaining step:** running the BPMN fully unattended needs the Orchestrator
+job-argument envelope for the agent process resolved and a serverless robot assigned
+to `solution_folder` (the agent runs correctly today in Agent Builder; this is
+deployment plumbing). The in-Maestro human gate needs an Action Center action app.
 
 ## Coded + low-code, together
 

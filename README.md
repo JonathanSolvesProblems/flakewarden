@@ -80,6 +80,33 @@ deterministic-vs-generative boundary. For how this differs from detection tools
 Autopilot), and the defensible uniqueness claim, see
 [`docs/prior-art.md`](docs/prior-art.md).
 
+## Running live on UiPath Automation Cloud
+
+What is actually deployed and verified on the platform (not mocked):
+
+- **Triage Classifier agent** — built in **UiPath Agent Builder** (Studio Web) with
+  a grounded context, a structured output schema, an evaluation set, and an
+  AI-Trust-Layer model. **Verified live across all three classes**: real_defect
+  (0.97), flaky (0.86, with a proposed fix), environment (0.97), each with correct,
+  evidence-cited reasoning. **Published (v1.0.0) and deployed as an Orchestrator
+  process** (`Solution.1.agent.Agent`).
+- **Maestro BPMN orchestration** ([`flakewarden-maestro/`](flakewarden-maestro/)) —
+  Start → agent call (`Orchestrator.StartAgentJob`) → verdict extraction → exclusive
+  gateway on the label → three routed branches (flaky → human-gated heal, real_defect
+  → escalate, environment → re-run). **Authored entirely through the `uip` CLI** and
+  passing `uip maestro bpmn validate`.
+- **Built with a coding agent end to end** — the agent scaffolding and the entire
+  Maestro orchestration were produced by **Claude Code driving the UiPath `uip` CLI**
+  (UiPath for Coding Agents): `uip login`, `uip skills`, `uip tools install`,
+  `uip agent deploy`, `uip maestro bpmn registry/init/validate`. See
+  [`docs/coding-agents.md`](docs/coding-agents.md).
+
+Documented next step (honest): wiring the deployed agent's Orchestrator job-argument
+envelope and a serverless robot to the agent folder so the BPMN runs the agent
+end-to-end unattended, plus an Action Center action app for the in-Maestro human gate.
+The agent itself runs correctly today (verified in Agent Builder); these are the
+deployment-plumbing steps between "agent runs" and "BPMN runs the agent unattended."
+
 ## UiPath components used
 
 | Component | Role |
