@@ -13,6 +13,9 @@ seeded_suite/history.jsonl
 .env
 *.local
 
+# Devpost submission draft (not part of the deliverable repo)
+submission.md
+
 # OS / editor
 .DS_Store
 .vscode/
