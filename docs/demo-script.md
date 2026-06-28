@@ -64,7 +64,7 @@ plain language. Criterion each beat serves is in [brackets].
 **VOICEOVER:**
 > "FlakeWarden runs on the UiPath platform end to end. The agent is built in Agent Builder, grounded on the test evidence, and deployed as a process on Orchestrator. UiPath Maestro orchestrates the flow: the agent classifies, and the verdict routes, flaky goes to a human-review heal, real defects escalate, environment re-runs on clean infra. The right actor on the right failure, with the human at the decision point."
 
-**B-ROLL:** `deployed-process.mp4` (Orchestrator, Agent process Active) then back to `maestro-graph.mp4` on the three branches as you name them.
+**B-ROLL:** `maestro-run.mp4` — the live end-to-end Maestro run going green (Failing test → Triage Classifier → Verdict? gateway → Flaky branch), then `deployed-process.mp4` (Orchestrator, Agent process Active). This is your "it actually runs on the platform" proof.
 
 ---
 
@@ -89,7 +89,7 @@ plain language. Criterion each beat serves is in [brackets].
 2. `verdict-real_defect.mp4`
 3. `verdict-flaky.mp4`
 4. `verdict-environment.mp4`
-5. `maestro-graph.mp4`
+5. `maestro-run.mp4` (live end-to-end run going green) — primary; `maestro-graph.mp4` optional supporting shot
 6. `eval-numbers.mp4`
 7. `deployed-process.mp4`
 8. `coding-agent-cli.mp4`
@@ -99,11 +99,11 @@ plain language. Criterion each beat serves is in [brackets].
 - Read the voiceover in one pass per beat; leave a half-second gap between beats for editing.
 - Pace ~150 words/min. The narration is ~420 words ≈ 2.8 min of pure speech; with b-roll pauses it lands ~3.5–4 min, well under the 5:00 cap. You have margin, don't rush.
 - Say the **0% safety false-positive rate** clearly, it's the trust anchor, and pair it with "on a synthetic corpus" once so it reads as honest, not overclaimed.
-- Don't show a faulted Maestro run; the design-mode graph carries the orchestration story.
+- The Maestro run goes green end-to-end now, lead Beat 5 with `maestro-run.mp4` (the live successful run) for maximum impact.
 - Smile while reading the close; it comes through in the audio.
 
 ## Honesty guardrails (so nothing in the video is overclaimed)
 - Agent classifying: **live and real**, show it.
-- Maestro orchestration: shown as the **authored + validated design/graph**. Do not claim an unattended end-to-end run.
+- Maestro orchestration: **runs live end-to-end** (the agent classifies, the Verdict? gateway routes to the flaky branch, the instance completes Successful). Show the green run, this is real now.
 - Numbers: **measured on a synthetic-but-adversarial corpus** (say "synthetic" once).
 - Coding agent: **real** (the CLI deployed the agent and authored/validated the BPMN).
