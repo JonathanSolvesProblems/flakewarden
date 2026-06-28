@@ -12,7 +12,7 @@ plain language. Criterion each beat serves is in [brackets].
 >
 > FlakeWarden is an agentic triage system for UiPath Test Cloud. It looks at a failing test and answers the one question that matters: is this a real defect, a flaky test, or an environment problem? The design follows one principle. Deterministic where the math should be exact, generative where the evidence is messy. And a human stays in charge of every fix.
 >
-> Here's the agent running live in UiPath Agent Builder. First, a failing checkout test. The stack trace is a business-value assertion, the total is wrong, and the commit renamed a selector. The agent reasons over that evidence and calls it a real defect, 97% confident, and it proposes no fix, because you don't heal a real bug. Now a flaky one. A stale-element error, no real code change, just timing. It calls it flaky, and this time it does propose a fix: re-locate the element and add a wait. But that fix is a proposal for a human to approve, never applied automatically. And a third. A 503 from an upstream service with an open incident. Environment. Re-run on clean infrastructure, don't blame the test or the code. Same agent, three evidence-grounded calls.
+> Here's the agent running live in UiPath Agent Builder. First, a failing checkout test. The stack trace is a business-value assertion, the total is wrong, and the commit renamed a selector. The agent reasons over that evidence and calls it a real defect, 95% confident, and it proposes no fix, because you don't heal a real bug. Now a flaky one. A stale-element error, no real code change, just timing. It calls it flaky, and this time it does propose a fix: re-locate the element and add a wait. But that fix is a proposal for a human to approve, never applied automatically. And a third. A 503 from an upstream service with an open incident. Environment. Re-run on clean infrastructure, don't blame the test or the code. Same agent, three evidence-grounded calls.
 >
 > Why would a QA lead trust this? Because of the safety contract: a real regression is never quarantined as flaky. When the evidence is split, the agent escalates instead of hiding. I measured it on a 150-case corpus, synthetic but deliberately adversarial: 90.7% accuracy, and a zero-percent safety false-positive rate. Not zero by luck. Zero by design, enforced by a check that fails the build if it ever regresses.
 >
@@ -38,13 +38,13 @@ plain language. Criterion each beat serves is in [brackets].
 **VOICEOVER:**
 > "FlakeWarden is an agentic triage system for UiPath Test Cloud. It looks at a failing test and answers the one question that matters: is this a real defect, a flaky test, or an environment problem? The design follows one principle. Deterministic where the math should be exact, generative where the evidence is messy. And a human stays in charge of every fix."
 
-**B-ROLL:** `maestro-graph.mp4` — slow pan across the flow (Start → Triage Classifier → Verdict? → the three branches). This is your "here's the shape of it" shot.
+**B-ROLL:** `deck-architecture.png` (in `preview/`), a slow Ken Burns across the architecture flow (Test Cloud → Flake-scorer → Grounded Classifier → Governed router → the three branches: flaky / real_defect / environment). This is your "here's the shape of it" shot. (There is no `maestro-graph.mp4`; the live Maestro run is Beat 5.)
 
 ---
 
 ## Beat 3 — The agent, classifying live  (1:02–2:12)  [Technical Execution / Platform Usage]
 **VOICEOVER:**
-> "Here's the agent running live in UiPath Agent Builder. First, a failing checkout test. The stack trace is a business-value assertion, the total is wrong, and the commit renamed a selector. The agent reasons over that evidence and calls it a real defect, 97% confident, and it proposes no fix, because you don't heal a real bug.
+> "Here's the agent running live in UiPath Agent Builder. First, a failing checkout test. The stack trace is a business-value assertion, the total is wrong, and the commit renamed a selector. The agent reasons over that evidence and calls it a real defect, 95% confident, and it proposes no fix, because you don't heal a real bug.
 > Now a flaky one. A stale-element error, no real code change, just timing. It calls it flaky, and this time it does propose a fix: re-locate the element and add a wait. But that fix is a proposal for a human to approve, never applied automatically.
 > And a third. A 503 from an upstream service with an open incident. Environment. Re-run on clean infrastructure, don't blame the test or the code. Same agent, three evidence-grounded calls."
 
@@ -89,7 +89,7 @@ plain language. Criterion each beat serves is in [brackets].
 2. `verdict-real_defect.mp4`
 3. `verdict-flaky.mp4`
 4. `verdict-environment.mp4`
-5. `maestro-run.mp4` (live end-to-end run going green) — primary; `maestro-graph.mp4` optional supporting shot
+5. `maestro-run.mp4` (live end-to-end run going green); `deck-architecture.png` is the Beat 2 "shape of it" shot
 6. `eval-numbers.mp4`
 7. `deployed-process.mp4`
 8. `coding-agent-cli.mp4`
@@ -97,7 +97,7 @@ plain language. Criterion each beat serves is in [brackets].
 
 ## Recording tips
 - Read the voiceover in one pass per beat; leave a half-second gap between beats for editing.
-- Pace ~150 words/min. The narration is ~420 words ≈ 2.8 min of pure speech; with b-roll pauses it lands ~3.5–4 min, well under the 5:00 cap. You have margin, don't rush.
+- Pace ~150 words/min. The narration is ~495 words ≈ 3.3 min of pure speech; the recorded take lands at 3:17, under the 5:00 cap. You have margin, don't rush.
 - Say the **0% safety false-positive rate** clearly, it's the trust anchor, and pair it with "on a synthetic corpus" once so it reads as honest, not overclaimed.
 - The Maestro run goes green end-to-end now, lead Beat 5 with `maestro-run.mp4` (the live successful run) for maximum impact.
 - Smile while reading the close; it comes through in the audio.

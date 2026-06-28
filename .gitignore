@@ -20,6 +20,15 @@ submission.md
 broll/
 # Stray screen-recording exports at the repo root
 2026-*.mp4
+# Rendered demo video + vertical Short (large; hosted on YouTube/Devpost, not committed)
+FlakeWarden-*.mp4
+demo*.mp4
+
+# Presentation deck binaries (hosted externally; large, not committed)
+FlakeWarden-*.pdf
+FlakeWarden-*.pptx
+# Official AgentHack template example (third-party content, not ours to publish)
+Submission deck.pptx
 
 # OS / editor
 .DS_Store

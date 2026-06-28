@@ -2,7 +2,11 @@
 
 **Agentic flaky-test triage and self-healing reviewer for UiPath Test Cloud.**
 
-UiPath AgentHack 2026 — **Track 3: UiPath Test Cloud**
+**90.7% triage accuracy · a measured 0% safety-direction false-positive rate** on a 150-case labeled corpus.
+
+UiPath AgentHack 2026, **Track 3: UiPath Test Cloud**
+
+**[Watch the demo (3 min)](https://www.youtube.com/watch?v=6md-vEuY_-0&t=1s)**  ·  [Slide deck (PDF)](https://jonathanandrei.com/decks/flakewarden-deck.pdf)  ·  [Blog post](https://jonathanandrei.com/blog/flakewarden-agentic-flaky-test-triage-uipath-maestro/)
 
 ---
 
@@ -11,7 +15,9 @@ real regression *or* just noise, engineers either burn time triaging every failu
 or, worse, start ignoring red builds, and a genuine regression ships. Google's
 continuous-testing study reported that **~16% of their tests had some level of
 flakiness** and that **~84% of pass→fail transitions came from flaky tests**
-(Memon et al., *Taming Google-Scale Continuous Testing*, ICSE-SEIP 2017). As an
+(J. Micco, [*Flaky Tests at Google and How We Mitigate Them*](https://testing.googleblog.com/2016/05/flaky-tests-at-google-and-how-we.html),
+Google Testing Blog, 2016; corroborated by Memon et al., *Taming Google-Scale
+Continuous Testing*, ICSE-SEIP 2017). As an
 illustrative model: at a 5% flake rate a 2,000-test suite produces ~100 spurious
 failures per full run, and at an assumed 15–45 minutes of triage each that is tens
 of engineer-hours per cycle (the per-failure minutes are an assumption, not a
@@ -31,6 +37,13 @@ generative where the context is messy.**
   messages, and runner logs) reasons over only the ambiguous failures.
 - **UiPath Maestro** orchestrates the two plus a **Repair Agent**, and every fix or
   quarantine passes through a mandatory **Action Center** human-review gate.
+
+**What makes it different:** detection tools (Datadog, Develocity, Trunk) only flag
+flaky tests; healing tools (Healenium, Tricentis, UiPath Autopilot) only patch
+selectors. FlakeWarden's moat is the composition: it **decides** between real defect,
+flaky, and environment, then routes each to a governed, human-gated UiPath action,
+under a measured **0% safety-direction false-positive** contract
+([`docs/prior-art.md`](docs/prior-art.md)).
 
 ## Measured results (not just a demo)
 
@@ -87,7 +100,7 @@ What is actually deployed and verified on the platform (not mocked):
 - **Triage Classifier agent** — built in **UiPath Agent Builder** (Studio Web) with
   a grounded context, a structured output schema, an evaluation set, and an
   AI-Trust-Layer model. **Verified live across all three classes**: real_defect
-  (0.97), flaky (0.86, with a proposed fix), environment (0.97), each with correct,
+  (0.95), flaky (0.86, with a proposed fix), environment (0.97), each with correct,
   evidence-cited reasoning. **Published (v1.0.0) and deployed as an Orchestrator
   process** (`Solution.1.agent.Agent`).
 - **Maestro BPMN orchestration** ([`flakewarden-maestro/`](flakewarden-maestro/)) —
@@ -120,17 +133,18 @@ deployment-plumbing steps between "agent runs" and "BPMN runs the agent unattend
 | **Orchestrator** | Hosts the deployed solution package; executes governed write-backs |
 | **AI Trust Layer** | PII redaction + audit logging around every agent call |
 
-## Agents: coded + low-code
+## Agent type: Both (Coded Agents + Low-code Agents)
 
-This solution **combines coding agents with low-code Agent Builder agents**:
+**Direct answer to the judging question: both.** A low-code UiPath Agent Builder
+agent does the grounded reasoning, a coded Python agent does the exact and auditable
+scoring, and the entire build was driven by a coding agent (the UiPath for Coding
+Agents bonus).
 
-- **Built with a coding agent.** The entire solution (the deterministic scorer, the
-  classifier interface, the eval harness, the Maestro orchestration, packaging and
-  deployment) was scaffolded and iterated using **Claude Code driving the UiPath
-  `uip` CLI** (UiPath for Coding Agents). See [`docs/coding-agents.md`](docs/coding-agents.md).
-- **Low-code Agent Builder agents.** The Triage Classifier and Repair Agent are
-  defined as Agent Builder agents ([`agents/`](agents/)) with grounded sources, an
-  output schema, guardrails, and an evaluation set with a release gate.
+| Layer | What it is | UiPath surface |
+|---|---|---|
+| **Low-code agent** *(deployed live)* | Triage Classifier + Repair Agent: grounded sources, structured output schema, guardrails, and an eval set with a release gate. Published v1.0.0, deployed as an Orchestrator process. | UiPath Agent Builder ([`agents/`](agents/)) |
+| **Coded agent** | Deterministic flake-scorer, classifier interface, and eval harness: exact, auditable logic the low-code layer calls. | UiPath Coded Agents / Python ([`flakewarden/`](flakewarden/)) |
+| **Built with a coding agent** *(bonus)* | The whole solution and the entire Maestro BPMN, scaffolded and iterated end to end. | Claude Code driving the `uip` CLI ([`docs/coding-agents.md`](docs/coding-agents.md)) |
 
 ## Quickstart (local, no UiPath account needed)
 
@@ -166,11 +180,12 @@ in [`SETUP.md`](SETUP.md).
 flakewarden/      deterministic scorer, grounded classifier, orchestration, CLI
 agents/           Agent Builder definitions + the grounded classifier prompt
 maestro/          Maestro process definition + step-to-component mapping
+flakewarden-maestro/  CLI-authored, registry-valid Maestro BPMN (passes uip maestro bpmn validate)
 corpus/           labeled evaluation corpus + its deterministic generator
 seeded_suite/     a seeded flaky test suite + history exporter (demo data source)
 eval/             accuracy/false-positive harness + negative-control gate
 tests/            unit tests for the scorer and orchestration invariants
-docs/             architecture, demo script, presentation outline, coding-agents note
+docs/             prior-art, limitations, deploy runbook, demo script, presentation outline, coding-agents note
 ```
 
 ## Honest limitations & path to production

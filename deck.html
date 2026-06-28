@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>FlakeWarden · AgentHack 2026 deck</title>
+<style>
+  :root{
+    --bg:#0a0e1a; --bg2:#121a2e; --panel:#161f38; --ink:#eef2fb; --muted:#9aa6c2;
+    --line:#26334f; --accent:#ff5a2c; --good:#34d399; --blue:#5b9dff; --amber:#fbbf24;
+    --mono:"Cascadia Code",ui-monospace,Consolas,"Courier New",monospace;
+    --sans:"Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;background:#05070d;font-family:var(--sans);color:var(--ink)}
+  body{display:flex;align-items:center;justify-content:center;overflow:hidden}
+
+  /* one logical slide = 1280x720, scaled to fit */
+  #stage{position:relative;width:1280px;height:720px;transform-origin:center center}
+  .slide{position:absolute;inset:0;display:none;flex-direction:column;
+    padding:54px 64px 48px;background:
+      radial-gradient(1200px 600px at 85% -10%, rgba(255,90,44,.10), transparent 60%),
+      radial-gradient(900px 500px at -10% 110%, rgba(91,157,255,.10), transparent 60%),
+      var(--bg);border:1px solid var(--line);border-radius:18px;overflow:hidden}
+  .slide.active{display:flex}
+
+  .crit{position:absolute;top:20px;right:24px;font-size:12px;letter-spacing:.04em;
+    color:var(--muted);border:1px solid var(--line);border-radius:999px;
+    padding:5px 12px;background:rgba(255,255,255,.02)}
+  .kicker{font-size:14px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);font-weight:700}
+  h1{font-size:40px;line-height:1.1;font-weight:800;letter-spacing:-.01em}
+  h2{font-size:33px;line-height:1.12;font-weight:800;letter-spacing:-.01em;margin-bottom:6px}
+  .sub{color:var(--muted);font-size:18px;line-height:1.45}
+  .accent{color:var(--accent)} .good{color:var(--good)} .blue{color:var(--blue)} .amber{color:var(--amber)}
+  .mono{font-family:var(--mono)}
+  .grow{flex:1} .row{display:flex;gap:20px} .col{display:flex;flex-direction:column;gap:14px}
+  .center{align-items:center;justify-content:center;text-align:center}
+
+  ul{list-style:none;display:flex;flex-direction:column;gap:13px;margin-top:6px}
+  li{position:relative;padding-left:26px;font-size:18px;line-height:1.4;color:#dde4f3}
+  li::before{content:"";position:absolute;left:2px;top:9px;width:9px;height:9px;border-radius:3px;
+    background:var(--accent);box-shadow:0 0 0 4px rgba(255,90,44,.14)}
+  li.g::before{background:var(--good);box-shadow:0 0 0 4px rgba(52,211,153,.16)}
+  li.b::before{background:var(--blue);box-shadow:0 0 0 4px rgba(91,157,255,.16)}
+  small,.fine{color:var(--muted);font-size:14px;line-height:1.4}
+
+  .card{background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.01));
+    border:1px solid var(--line);border-radius:14px;padding:18px 20px}
+  .chip{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);
+    border-radius:999px;padding:7px 14px;font-size:14px;font-weight:600;background:rgba(255,255,255,.02)}
+  .dot{width:9px;height:9px;border-radius:50%}
+  .figframe{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#0c1322;
+    box-shadow:0 12px 30px rgba(0,0,0,.35)}
+  .figframe img{display:block;width:100%;height:100%;object-fit:cover;object-position:top center}
+  .cap{font-size:13px;color:var(--muted);margin-top:7px;line-height:1.35}
+
+  .foot{position:absolute;left:64px;right:64px;bottom:20px;display:flex;justify-content:space-between;
+    align-items:center;color:var(--muted);font-size:13px;border-top:1px solid var(--line);padding-top:12px}
+
+  /* big metric tiles */
+  .metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+  .metric{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px 20px;text-align:center}
+  .metric .n{font-size:46px;font-weight:850;letter-spacing:-.02em;line-height:1}
+  .metric .l{color:var(--muted);font-size:14px;margin-top:8px;line-height:1.3}
+
+  /* architecture flow */
+  .flow{display:flex;align-items:center;gap:10px;flex-wrap:nowrap;margin-top:10px}
+  .node{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;
+    min-width:120px;text-align:center;font-size:13.5px;line-height:1.25}
+  .node b{display:block;font-size:14px;margin-bottom:3px}
+  .node .t{color:var(--muted);font-size:11.5px}
+  .node.acc{border-color:rgba(255,90,44,.5);background:rgba(255,90,44,.07)}
+  .node.good{border-color:rgba(52,211,153,.45);background:rgba(52,211,153,.06)}
+  .node.blue{border-color:rgba(91,157,255,.45);background:rgba(91,157,255,.06)}
+  .arrow{color:var(--muted);font-size:13px;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:64px}
+  .arrow .lbl{font-size:10.5px;letter-spacing:.02em}
+  .branchwrap{display:flex;flex-direction:column;gap:8px}
+
+  /* two-col compare */
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:6px}
+  .pane{border:1px solid var(--line);border-radius:14px;padding:18px 20px;background:rgba(255,255,255,.02)}
+  .pane h3{font-size:18px;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+  .pane.det{border-color:rgba(52,211,153,.35)} .pane.gen{border-color:rgba(91,157,255,.35)}
+  .pane ul{margin-top:2px} .pane li{font-size:15.5px;padding-left:22px} .pane li::before{top:8px;width:7px;height:7px}
+
+  /* components table */
+  table{width:100%;border-collapse:collapse;font-size:14.5px}
+  td,th{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--muted);font-weight:600;font-size:12.5px;letter-spacing:.04em;text-transform:uppercase}
+  td b{color:#fff}
+
+  .verdict-row{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  .verdict .figframe{height:184px}
+  .vhead{display:flex;align-items:center;gap:8px;margin-bottom:6px;font-weight:700;font-size:15px}
+
+  .hint{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);color:#54607a;font-size:12px;z-index:50}
+  .pager{display:flex;gap:6px;align-items:center}
+  .pager b{color:var(--ink)}
+
+  /* print: one slide per page, all shown */
+  @media print{
+    @page{size:1280px 720px;margin:0}
+    html,body{height:auto;display:block;background:#fff;overflow:visible}
+    #stage{transform:none!important;width:1280px;height:720px}
+    .slide{display:flex!important;position:relative;inset:auto;page-break-after:always;
+      border-radius:0;border:none;width:1280px;height:720px}
+    .hint{display:none}
+  }
+</style>
+</head>
+<body>
+<div id="stage">
+
+  <!-- 1 · TITLE -->
+  <section class="slide active center">
+    <div class="kicker">UiPath AgentHack 2026 · Track 3 · UiPath Test Cloud</div>
+    <h1 style="font-size:74px;margin:18px 0 10px">Flake<span class="accent">Warden</span></h1>
+    <div style="font-size:24px;color:#dde4f3;font-weight:600">Agentic flaky-test triage for UiPath Test Cloud</div>
+    <div class="sub" style="max-width:780px;margin:16px auto 0">
+      Real defect, flaky, or environment? <span class="accent">With a human in charge of every change.</span>
+    </div>
+    <div class="row center" style="gap:10px;margin-top:30px;flex-wrap:wrap;justify-content:center">
+      <span class="chip"><span class="dot" style="background:var(--accent)"></span>Deterministic + generative</span>
+      <span class="chip"><span class="dot" style="background:var(--good)"></span>0% safety false-positive</span>
+      <span class="chip"><span class="dot" style="background:var(--blue)"></span>Built with a coding agent</span>
+    </div>
+    <div class="foot"><span>Jonathan Andrei</span><span>github.com/JonathanSolvesProblems/flakewarden · MIT</span></div>
+  </section>
+
+  <!-- 2 · PROBLEM -->
+  <section class="slide">
+    <span class="crit">Business Impact &amp; Adoption</span>
+    <div class="kicker">The problem</div>
+    <h2>Flaky tests are the most corrosive failure mode in CI.</h2>
+    <p class="sub" style="max-width:920px">When a build goes red, you often can't tell a real regression from noise.</p>
+    <div class="metrics" style="margin-top:26px">
+      <div class="metric"><div class="n accent">~16%</div><div class="l">of Google's tests showed some flakiness</div></div>
+      <div class="metric"><div class="n accent">~84%</div><div class="l">of pass→fail transitions came from flaky tests</div></div>
+      <div class="metric"><div class="n">~100</div><div class="l">spurious failures per run at 5% flake on a 2,000-test suite</div></div>
+    </div>
+    <div class="card" style="margin-top:24px">
+      <b class="accent">The real cost isn't the triage minutes.</b>
+      <span class="sub" style="font-size:17px"> Teams stop trusting red builds, start ignoring them, and a genuine regression ships to production.</span>
+    </div>
+    <div class="foot"><span>Memon et al., <i>Taming Google-Scale Continuous Testing</i>, ICSE-SEIP 2017</span><span>2 / 12</span></div>
+  </section>
+
+  <!-- 3 · THE IDEA -->
+  <section class="slide">
+    <span class="crit">Creativity &amp; Innovation</span>
+    <div class="kicker">The idea</div>
+    <h2>Answer the one question that matters, then route the failure.</h2>
+    <div class="row" style="gap:12px;margin:14px 0 6px">
+      <span class="chip"><span class="dot" style="background:var(--accent)"></span><b>real_defect</b> → escalate</span>
+      <span class="chip"><span class="dot" style="background:var(--amber)"></span><b>flaky</b> → propose a fix (human-gated)</span>
+      <span class="chip"><span class="dot" style="background:var(--blue)"></span><b>environment</b> → re-run on clean infra</span>
+    </div>
+    <div class="two" style="grid-template-columns:1fr;margin-top:14px">
+      <div class="pane">
+        <h3 class="accent">The uniqueness claim</h3>
+        <p class="sub" style="font-size:17px;color:#dde4f3">
+          Detection tools tell you a test is flaky. Healing tools auto-repair selectors.
+          <b class="accent">FlakeWarden is the governance layer between them:</b>
+          a reproducible, auditable scorer that spends an LLM only on the ambiguous band, under a hard safety
+          contract (a real regression is never auto-quarantined as flaky), with every fix a
+          <b>human-gated proposal written back through UiPath</b>, not an autonomous mutation.
+        </p>
+      </div>
+    </div>
+    <p class="fine" style="margin-top:14px">The moat is the <b class="accent">composition + safety contract</b>, not any single component. Positioned vs Datadog / Develocity / Trunk (detection) and Healenium / Tricentis / UiPath Autopilot (healing) in <span class="mono">docs/prior-art.md</span>.</p>
+    <div class="foot"><span>FlakeWarden</span><span>3 / 12</span></div>
+  </section>
+
+  <!-- 4 · THE THESIS -->
+  <section class="slide">
+    <span class="crit">AI Factor · Creativity</span>
+    <div class="kicker">The thesis</div>
+    <h2>Deterministic where the math must be exact. Generative where the evidence is messy.</h2>
+    <div class="two">
+      <div class="pane det">
+        <h3 class="good">◧ Deterministic flake-scorer</h3>
+        <ul>
+          <li class="g">Auditable statistics over run history, no model call</li>
+          <li class="g">Resolves the confident cases and <b>never guesses</b></li>
+          <li class="g"><b>52 / 150</b> failures resolved here, ~⅓, zero LLM spent</li>
+          <li class="g">Reproducible: same input → same verdict, every time</li>
+        </ul>
+      </div>
+      <div class="pane gen">
+        <h3 class="blue">◍ Grounded Agent Builder classifier</h3>
+        <ul>
+          <li class="b">RAG over stack trace, DOM diff, commit message, runner logs</li>
+          <li class="b">Reasons over <b>only the ambiguous band</b> (the other 98)</li>
+          <li class="b">Cites the evidence; tie-breaks toward <b>real_defect</b></li>
+          <li class="b">Runs on UiPath AI Trust Layer (PII redaction + audit)</li>
+        </ul>
+      </div>
+    </div>
+    <div class="card center" style="margin-top:20px">
+      <b>And a human approves every change.</b> <span class="sub" style="font-size:16px">The model proposes; it never mutates the suite on its own.</span>
+    </div>
+    <div class="foot"><span>The deterministic-vs-generative boundary is the headline AI design decision</span><span>4 / 12</span></div>
+  </section>
+
+  <!-- 5 · ARCHITECTURE -->
+  <section class="slide">
+    <span class="crit">Technical Execution</span>
+    <div class="kicker">Architecture</div>
+    <h2>One Maestro process. The right actor on the right failure.</h2>
+    <div class="flow" style="margin-top:30px">
+      <div class="node blue"><b>Test Cloud</b><span class="t">Test Manager results + execution history</span></div>
+      <div class="arrow">→</div>
+      <div class="node good"><b>Flake-scorer</b><span class="t">deterministic, auditable math</span></div>
+      <div class="arrow"><span>→</span><span class="lbl">ambiguous</span></div>
+      <div class="node"><b>Grounded<br>Classifier</b><span class="t">Agent Builder + RAG</span></div>
+      <div class="arrow">→</div>
+      <div class="node acc"><b>Governed<br>router</b><span class="t">verdict → action</span></div>
+      <div class="arrow">→</div>
+      <div class="branchwrap">
+        <div class="node" style="min-width:150px"><b class="amber">flaky</b><span class="t">Repair Agent drafts fix</span></div>
+        <div class="node" style="min-width:150px"><b class="accent">real_defect</b><span class="t">escalate</span></div>
+        <div class="node" style="min-width:150px"><b class="blue">environment</b><span class="t">re-run clean infra</span></div>
+      </div>
+    </div>
+    <div class="row" style="justify-content:center;gap:14px;margin-top:36px;align-items:center">
+      <span class="chip"><span class="dot" style="background:var(--good)"></span>confident cases auto-resolve</span>
+      <span class="arrow" style="min-width:30px">→</span>
+      <span class="chip" style="border-color:rgba(255,90,44,.5)"><span class="dot" style="background:var(--accent)"></span><b>Action Center: mandatory human review gate</b></span>
+      <span class="arrow" style="min-width:30px">→</span>
+      <span class="chip"><span class="dot" style="background:var(--blue)"></span>Orchestrator: quarantine / promote / open defect</span>
+    </div>
+    <p class="fine center" style="margin-top:26px">Three confidence bands, plus a defect cap: a selector change at the moment of breakage is treated as a real defect, even when the runtime looks jittery.</p>
+    <div class="foot"><span>Full data flow in <span class="mono">ARCHITECTURE.md</span></span><span>5 / 12</span></div>
+  </section>
+
+  <!-- 6 · LIVE VERDICTS -->
+  <section class="slide">
+    <span class="crit">Platform Usage · Technical Execution</span>
+    <div class="kicker">Live in UiPath Agent Builder</div>
+    <h2>Same agent, same grounding, three correct calls.</h2>
+    <div class="verdict-row verdict" style="margin-top:16px">
+      <div>
+        <div class="vhead"><span class="dot" style="background:var(--accent)"></span>real_defect · 0.95</div>
+        <div class="figframe"><img src="preview/verdict-real_defect.png" alt="real defect verdict"></div>
+        <div class="cap">Wrong total + renamed selector at the break. <b>Proposes no fix.</b> You don't heal a real bug.</div>
+      </div>
+      <div>
+        <div class="vhead"><span class="dot" style="background:var(--amber)"></span>flaky · 0.86</div>
+        <div class="figframe"><img src="preview/verdict-flaky.png" alt="flaky verdict"></div>
+        <div class="cap">Stale-element, no code change. <b>Proposes a fix</b> (re-locate + wait), but only as a proposal.</div>
+      </div>
+      <div>
+        <div class="vhead"><span class="dot" style="background:var(--blue)"></span>environment · 0.97</div>
+        <div class="figframe"><img src="preview/verdict-environment.png" alt="environment verdict"></div>
+        <div class="cap">503 from an upstream service with an open incident. <b>Re-run on clean infra</b>, blame neither test nor code.</div>
+      </div>
+    </div>
+    <p class="fine" style="margin-top:16px">Each verdict cites the evidence in its rationale. Published v1.0.0 and deployed as an Orchestrator process.</p>
+    <div class="foot"><span>UiPath Agent Builder (Studio Web), grounded + structured output</span><span>6 / 12</span></div>
+  </section>
+
+  <!-- 7 · SAFETY CONTRACT + RESULTS -->
+  <section class="slide">
+    <span class="crit">Business Impact · Technical Execution</span>
+    <div class="kicker">The safety contract, measured</div>
+    <h2>A real regression is never quarantined as flaky.</h2>
+    <div class="metrics" style="margin-top:22px">
+      <div class="metric"><div class="n">90.7%</div><div class="l">overall accuracy on a 150-case labeled corpus</div></div>
+      <div class="metric"><div class="n good">0.0%</div><div class="l"><b>safety false-positive rate</b><br>(no real defect ever hidden)</div></div>
+      <div class="metric"><div class="n amber">12%</div><div class="l">noise (flaky over-escalated as defect), the <i>safe</i> direction</div></div>
+    </div>
+    <div class="card" style="margin-top:22px">
+      <span class="sub" style="font-size:16.5px">
+        The 0% is <b class="good">enforced by a mechanism</b> (tie-break-to-defect + a flaky-band regression guard), not planted in the data.
+        Measured on a <b>synthetic-but-adversarial</b> corpus, not a production study.
+        <b>52 / 150</b> resolve deterministically; the grounded classifier carries the other <b>98</b>.
+        Run, not claimed: <span class="mono accent">python eval/harness.py</span> · gated by <span class="mono">eval/negative_control.py</span>.
+      </span>
+    </div>
+    <div class="foot"><span>Honest framing per <span class="mono">docs/limitations.md</span></span><span>7 / 12</span></div>
+  </section>
+
+  <!-- 8 · PLATFORM -->
+  <section class="slide">
+    <span class="crit">Platform Usage</span>
+    <div class="kicker">Running on the UiPath platform</div>
+    <h2>Built, grounded, orchestrated, and deployed on UiPath.</h2>
+    <div class="row" style="gap:22px;margin-top:14px">
+      <div style="flex:1.15">
+        <table>
+          <tr><th>Component</th><th>Role</th></tr>
+          <tr><td><b>Agent Builder</b></td><td>Hosts the grounded Triage Classifier + Repair Agent</td></tr>
+          <tr><td><b>Maestro</b></td><td>Orchestrates scorer → classifier → router → human gate</td></tr>
+          <tr><td><b>Context Grounding</b></td><td>Hybrid RAG over Test Manager artifacts</td></tr>
+          <tr><td><b>Action Center</b></td><td>Mandatory human review before any change</td></tr>
+          <tr><td><b>Orchestrator</b></td><td>Hosts the deployed solution; governed write-backs</td></tr>
+          <tr><td><b>AI Trust Layer</b></td><td>PII redaction + audit logging on every call</td></tr>
+        </table>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;gap:12px">
+        <div>
+          <div class="figframe" style="height:210px"><img src="preview/maestro-run.png" alt="live Maestro run"></div>
+          <div class="cap"><b class="good">Live Maestro run, end-to-end Successful.</b> Agent classifies, the Verdict? gateway routes to the flaky branch.</div>
+        </div>
+        <div>
+          <div class="figframe" style="height:120px"><img src="preview/deployed-process.png" alt="deployed agent"></div>
+          <div class="cap">Deployed on Orchestrator, v1.0.0.</div>
+        </div>
+      </div>
+    </div>
+    <div class="foot"><span>Coded scorer + low-code Agent Builder agents, orchestrated by Maestro</span><span>8 / 12</span></div>
+  </section>
+
+  <!-- 9 · GOVERNANCE -->
+  <section class="slide">
+    <span class="crit">Business Impact · Governance</span>
+    <div class="kicker">Governance &amp; the human gate</div>
+    <h2>The agent informs the decision. The human makes it.</h2>
+    <div class="two">
+      <div class="pane">
+        <ul>
+          <li><b>No autonomous mutation.</b> Every heal, quarantine, or baseline change is a proposal → Action Center.</li>
+          <li><b>Fail-safe default.</b> On low confidence the agent frames the failure as a defect, never silently quarantines.</li>
+        </ul>
+      </div>
+      <div class="pane">
+        <ul>
+          <li class="g"><b>Eval-driven release gate.</b> The agent can't publish below the accuracy + safety threshold.</li>
+          <li class="g"><b>Negative control.</b> 0 real defects hidden and 0 defects auto-healed across all 150 cases.</li>
+        </ul>
+      </div>
+    </div>
+    <div class="card center" style="margin-top:22px">
+      <span class="sub" style="font-size:17px">This is the line a QA lead has to trust: <b class="accent">the system escalates when it's unsure, instead of hiding.</b></span>
+    </div>
+    <div class="foot"><span>Aligns with "information, not automation": AI works <i>with</i> you, not instead of you</span><span>9 / 12</span></div>
+  </section>
+
+  <!-- 10 · CODING AGENT (BONUS) -->
+  <section class="slide">
+    <span class="crit">Platform Usage · Coding-Agent Bonus</span>
+    <div class="kicker">Built with a coding agent</div>
+    <h2>The whole build-and-deploy loop, from the terminal.</h2>
+    <div class="row" style="gap:22px;margin-top:12px">
+      <div style="flex:1.05;display:flex;flex-direction:column;gap:14px">
+        <ul>
+          <li class="b"><b>UiPath for Coding Agents:</b> a coding agent drove the <span class="mono">uip</span> CLI to deploy the agent, author the Maestro BPMN, and validate it.</li>
+          <li class="b"><span class="mono" style="font-size:14px">uip login · agent deploy · maestro bpmn registry / init / validate</span></li>
+          <li class="g">The eval loop caught a <b>real design flaw</b> (environment failures auto-classified as defects), lifting accuracy 70% → 90.7%.</li>
+          <li class="g">A self-review caught a <b>circular-corpus</b> problem, then de-rigged it: real engineering and honest methodology, not a one-shot generation.</li>
+        </ul>
+      </div>
+      <div style="flex:1">
+        <div class="figframe" style="height:330px"><img src="preview/coding-agent-cli.png" alt="uip CLI validate" style="object-position:center"></div>
+        <div class="cap"><span class="mono">uip maestro bpmn validate</span> → <b class="good">"Status": "Valid"</b>, 12 UiPath extensions, 1 process, 1 start event.</div>
+      </div>
+    </div>
+    <div class="foot"><span>Coded logic + low-code Agent Builder agent, orchestrated by Maestro · <span class="mono">docs/coding-agents.md</span></span><span>10 / 12</span></div>
+  </section>
+
+  <!-- 11 · LIMITATIONS -->
+  <section class="slide">
+    <span class="crit">Feasibility · Completeness</span>
+    <div class="kicker">Honest limitations &amp; path to production</div>
+    <h2>What's real today, and what production needs.</h2>
+    <div class="two">
+      <div class="pane gen">
+        <h3 class="blue">Real today</h3>
+        <ul>
+          <li class="b">Live grounded agent classifying all three classes on UiPath</li>
+          <li class="b">Maestro orchestration running end-to-end, Successful</li>
+          <li class="b">Measured accuracy + a mechanism-enforced 0% safety rate</li>
+          <li class="b">Production-shaped architecture, governance, and eval methodology</li>
+        </ul>
+      </div>
+      <div class="pane">
+        <h3 class="accent">The gap is the data</h3>
+        <ul>
+          <li>Corpus is synthetic-but-adversarial: a solo builder can't ship a real enterprise's CI history</li>
+          <li>Production needs the live Test Manager results API + gold-standard labels</li>
+          <li>Then a shadow-mode prospective study to report real-world accuracy</li>
+          <li>Drift monitoring is scaffolded, not solved (named honestly)</li>
+        </ul>
+      </div>
+    </div>
+    <p class="fine center" style="margin-top:18px">The architecture, governance gates, and eval methodology are production-shaped. The data is the honest gap.</p>
+    <div class="foot"><span><span class="mono">docs/limitations.md</span></span><span>11 / 12</span></div>
+  </section>
+
+  <!-- 12 · CLOSE -->
+  <section class="slide center">
+    <div class="kicker">FlakeWarden</div>
+    <h1 style="font-size:40px;max-width:980px;margin:18px 0 8px;line-height:1.18">
+      Deterministic where it must be exact. Generative where the context is messy.
+      <span class="accent">A human in charge of every change.</span>
+    </h1>
+    <p class="sub" style="max-width:760px;margin-top:8px">
+      The agent, the orchestration, the labeled corpus, and the setup instructions are all on GitHub under MIT.
+    </p>
+    <div class="row center" style="gap:10px;margin-top:28px;flex-wrap:wrap;justify-content:center">
+      <span class="chip mono">github.com/JonathanSolvesProblems/flakewarden</span>
+      <span class="chip">UiPath AgentHack 2026 · Track 3</span>
+    </div>
+    <div class="foot center" style="justify-content:center"><span>Thank you · Jonathan Andrei</span></div>
+  </section>
+
+</div>
+
+<div class="hint">← → / Space to navigate · press <b>P</b> to print to PDF · <b>F</b> fullscreen</div>
+
+<script>
+  const slides=[...document.querySelectorAll('.slide')];
+  let i=0;
+  function show(n){i=Math.max(0,Math.min(slides.length-1,n));
+    slides.forEach((s,k)=>s.classList.toggle('active',k===i));}
+  function fit(){const s=Math.min(innerWidth/1280,innerHeight/720)*0.97;
+    document.getElementById('stage').style.transform=`scale(${s})`;}
+  addEventListener('resize',fit); fit();
+  const h=parseInt((location.hash.match(/\d+/)||[1])[0],10); show((h||1)-1);
+  addEventListener('keydown',e=>{
+    if(['ArrowRight','ArrowDown',' ','PageDown'].includes(e.key)){show(i+1);e.preventDefault();}
+    else if(['ArrowLeft','ArrowUp','PageUp'].includes(e.key)){show(i-1);e.preventDefault();}
+    else if(e.key==='Home'){show(0);} else if(e.key==='End'){show(slides.length-1);}
+    else if(e.key==='p'||e.key==='P'){print();}
+    else if(e.key==='f'||e.key==='F'){if(!document.fullscreenElement)document.documentElement.requestFullscreen();else document.exitFullscreen();}
+  });
+  addEventListener('click',e=>{if(e.clientX<innerWidth*0.32)show(i-1);else show(i+1);});
+</script>
+</body>
+</html>

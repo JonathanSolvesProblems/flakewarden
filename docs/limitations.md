@@ -10,10 +10,15 @@ does *not* yet solve and what production would require.
   real, runnable, and tested.
 - The 90.7% accuracy / 0% safety-false-positive numbers are produced by running the
   pipeline over the corpus, not asserted.
-- The Maestro process and Agent Builder definitions are *illustrative artifacts*
-  structured the way the deployed solution needs them. They are not literal
-  importable files — real Maestro processes and Agent Builder agents are authored in
-  the low-code builders; see [`SETUP.md`](../SETUP.md).
+- The **Triage Classifier** is a real, published Agent Builder agent, verified live
+  across all three classes and deployed as an Orchestrator process. The **Maestro
+  BPMN** ([`flakewarden-maestro/`](../flakewarden-maestro/)) is a real, registry-valid
+  file authored entirely through the `uip` CLI: it passes `uip maestro bpmn validate`
+  (Status: Valid; 1 process, 1 start event, 12 UiPath extensions) and runs end-to-end
+  in the Maestro designer (the agent classifies, the `Verdict?` gateway routes, the
+  instance completes successfully). What remains is the unattended-trigger and Action
+  Center plumbing described under *What production requires* below, not the
+  orchestration itself.
 
 ## What is synthetic
 
@@ -36,9 +41,16 @@ does *not* yet solve and what production would require.
   (not the label), but it is a baseline. The live Agent Builder / Claude classifier
   is expected to do better on long-tail ambiguous cases; that should be measured,
   not assumed.
-- **The UiPath platform pieces are not yet deployed.** The orchestration runs as a
-  Python reimplementation of the Maestro flow; deploying to a real tenant and
-  capturing it is the top remaining task (see [`SETUP.md`](../SETUP.md)).
+- **The Maestro BPMN runs end-to-end in the designer/debug, not yet fully
+  unattended.** The grounded agent is published (v1.0.0) and deployed as an
+  Orchestrator process, and the Maestro BPMN runs end-to-end in the designer: the
+  agent classifies (flaky, confidence 0.88), the `Verdict?` exclusive gateway routes
+  to the matching branch, and the instance completes Successful. The remaining
+  production plumbing is wiring the deployed agent's Orchestrator job-argument
+  envelope plus a serverless robot so the BPMN invokes the agent fully unattended
+  (auto-triggered by a Test Cloud failure), and an Action Center action app for the
+  in-Maestro human gate; see [`SETUP.md`](../SETUP.md). A local Python reimplementation
+  of the same flow backs the offline eval harness.
 
 ## What production requires
 

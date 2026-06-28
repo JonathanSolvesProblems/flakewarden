@@ -7,7 +7,7 @@ the demo video, and the deck. Capture clean, full-resolution shots.
 
 Agent (done / in progress):
 - [ ] Published v1.0.0 panel (Change history → "Published v1.0.0", Orchestrator Tenant)
-- [ ] Verdict 1 — `real_defect` (Checkout_E2E_007): output showing label + 0.97 confidence + grounded rationale + empty proposed_fix
+- [ ] Verdict 1 — `real_defect` (Checkout_E2E_007): output showing label + 0.95 confidence + grounded rationale + empty proposed_fix
 - [ ] Verdict 2 — `flaky` (Cart_UI_012): label flaky + a proposed_fix
 - [ ] Verdict 3 — `environment` (Payments_API_003): label environment
 - [ ] Agent Definition canvas (system prompt + the 5 grounded input pills)
