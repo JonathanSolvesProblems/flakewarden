@@ -6,6 +6,26 @@ plain language. Criterion each beat serves is in [brackets].
 
 ---
 
+## FULL VOICEOVER — read straight through (record this in one pass)
+
+> Every engineering team has the same problem. When a test goes red, you can't tell if it's a real bug or just a flaky test. Google found about 16% of their tests are flaky, and that flaky failures cause most of their red builds. So teams either burn hours triaging noise, or they start ignoring red builds, and that's when a real regression ships to production.
+>
+> FlakeWarden is an agentic triage system for UiPath Test Cloud. It looks at a failing test and answers the one question that matters: is this a real defect, a flaky test, or an environment problem? The design follows one principle. Deterministic where the math should be exact, generative where the evidence is messy. And a human stays in charge of every fix.
+>
+> Here's the agent running live in UiPath Agent Builder. First, a failing checkout test. The stack trace is a business-value assertion, the total is wrong, and the commit renamed a selector. The agent reasons over that evidence and calls it a real defect, 97% confident, and it proposes no fix, because you don't heal a real bug. Now a flaky one. A stale-element error, no real code change, just timing. It calls it flaky, and this time it does propose a fix: re-locate the element and add a wait. But that fix is a proposal for a human to approve, never applied automatically. And a third. A 503 from an upstream service with an open incident. Environment. Re-run on clean infrastructure, don't blame the test or the code. Same agent, three evidence-grounded calls.
+>
+> Why would a QA lead trust this? Because of the safety contract: a real regression is never quarantined as flaky. When the evidence is split, the agent escalates instead of hiding. I measured it on a 150-case corpus, synthetic but deliberately adversarial: 90.7% accuracy, and a zero-percent safety false-positive rate. Not zero by luck. Zero by design, enforced by a check that fails the build if it ever regresses.
+>
+> FlakeWarden runs on the UiPath platform end to end. The agent is built in Agent Builder, grounded on the test evidence, and deployed as a process on Orchestrator. UiPath Maestro orchestrates the flow: the agent classifies, and the verdict routes, flaky goes to a human-review heal, real defects escalate, environment re-runs on clean infra. The right actor on the right failure, with the human at the decision point.
+>
+> And I built the whole thing with a coding agent. Using UiPath for Coding Agents, Claude Code drove the uip CLI to deploy the agent, author the Maestro orchestration, and validate it, the full build-and-deploy loop, from the terminal, in natural language. Coded logic plus a low-code Agent Builder agent, orchestrated by Maestro.
+>
+> FlakeWarden. Deterministic where it must be exact, generative where the context is messy, measured against a labeled corpus, and a human in charge of every change. The agent, the orchestration, the corpus, and the setup instructions are all on GitHub under MIT. Thanks for watching.
+
+> Tip: take a breath at each paragraph break (those are your beat boundaries for syncing b-roll later). The per-beat breakdown with matching b-roll is below.
+
+---
+
 ## Beat 1 — The problem  (0:00–0:28)  [Business Impact]
 **VOICEOVER:**
 > "Every engineering team has the same problem. When a test goes red, you can't tell if it's a real bug or just a flaky test. Google found about 16% of their tests are flaky, and that flaky failures cause most of their red builds. So teams either burn hours triaging noise, or they start ignoring red builds, and that's when a real regression ships to production."
@@ -58,7 +78,7 @@ plain language. Criterion each beat serves is in [brackets].
 
 ## Beat 7 — Close  (3:55–4:12)  [Presentation / Completeness]
 **VOICEOVER:**
-> "FlakeWarden. Deterministic where it must be exact, generative where the context is messy, measured against a real corpus, and a human in charge of every change. The agent, the orchestration, the corpus, and the setup instructions are all on GitHub under MIT. Thanks for watching."
+> "FlakeWarden. Deterministic where it must be exact, generative where the context is messy, measured against a labeled corpus, and a human in charge of every change. The agent, the orchestration, the corpus, and the setup instructions are all on GitHub under MIT. Thanks for watching."
 
 **B-ROLL:** GitHub repo page (README top) + closing title card with the repo URL.
 
