@@ -16,6 +16,11 @@ seeded_suite/history.jsonl
 # Devpost submission draft (not part of the deliverable repo)
 submission.md
 
+# Demo media (voiceover + b-roll clips; the final video goes to YouTube/Devpost)
+broll/
+# Stray screen-recording exports at the repo root
+2026-*.mp4
+
 # OS / editor
 .DS_Store
 .vscode/
