@@ -146,33 +146,70 @@ Agents bonus).
 | **Coded agent** | Deterministic flake-scorer, classifier interface, and eval harness: exact, auditable logic the low-code layer calls. | UiPath Coded Agents / Python ([`flakewarden/`](flakewarden/)) |
 | **Built with a coding agent** *(bonus)* | The whole solution and the entire Maestro BPMN, scaffolded and iterated end to end. | Claude Code driving the `uip` CLI ([`docs/coding-agents.md`](docs/coding-agents.md)) |
 
-## Quickstart (local, no UiPath account needed)
+## Setup and how to run it (for judging)
 
-Runs fully offline with a deterministic rule-based classifier; set
-`ANTHROPIC_API_KEY` to route the ambiguous band through a real Claude model.
+**Prerequisites:** Python 3.10 or newer. That is the only requirement to reproduce
+the results: the deterministic scorer, the offline classifier, the eval harness,
+and the negative-control gate use the Python standard library only, with **no
+third-party dependencies, no UiPath account, and no API key.**
+
+### 1. Clone (and optionally install the CLI)
 
 ```bash
-python --version                      # 3.10+
+git clone https://github.com/JonathanSolvesProblems/flakewarden.git
+cd flakewarden
+python --version            # confirm 3.10+
+pip install -e .            # optional: installs the `flakewarden` console script.
+                            # The steps below also run as-is without installing.
+```
 
-# 1. Generate the labeled evaluation corpus (deterministic, seeded)
+### 2. Reproduce the measured accuracy and safety numbers
+
+```bash
+# a) build the labeled 150-case corpus (deterministic, seeded)
 python corpus/generate_corpus.py
 
-# 2. Reproduce the measured accuracy + false-positive rate
+# b) measure accuracy + the false-positive rates, writing eval/report.md
 python eval/harness.py --report eval/report.md
 
-# 3. Prove the safety invariants hold (gates CI)
+# c) prove the safety invariant (exit code 0 = pass, non-zero = a real defect was hidden)
 python eval/negative_control.py
+```
 
-# 4. End-to-end on a freshly-run seeded test suite
-python seeded_suite/run_history.py --runs 14
+Expected result: **~90.7% overall accuracy** and a **0% safety-direction
+false-positive rate**. The negative-control gate fails loudly if any real defect is
+ever classified as flaky/environment. Full numbers land in
+[`eval/report.md`](eval/report.md).
+
+### 3. Run the full triage end to end on a fresh test suite
+
+```bash
+python seeded_suite/run_history.py --runs 14            # emit fresh execution history
+python -m flakewarden.cli triage seeded_suite/history.jsonl   # triage + per-failure verdicts
+```
+
+### 4. Optional: unit tests and the live LLM backend
+
+```bash
+pip install -e ".[dev]" && python -m pytest -q         # unit tests
+
+# route the ambiguous band through a real Claude model instead of the offline rules:
+pip install -e ".[llm]"
+export ANTHROPIC_API_KEY=sk-...     # PowerShell: $env:ANTHROPIC_API_KEY="sk-..."
 python -m flakewarden.cli triage seeded_suite/history.jsonl
 ```
 
 ## Deploy on UiPath Automation Cloud
 
-Step-by-step wiring into your UiPath Labs tenant (Maestro process, Agent Builder
-agents, Test Manager connection, Action Center, `uip` CLI packaging and deploy) is
-in [`SETUP.md`](SETUP.md).
+To wire the solution into a UiPath Labs tenant, the full step-by-step guide is in
+[`SETUP.md`](SETUP.md): install the `uip` CLI (`npm install -g @uipath/cli`,
+`uip login`), author the **Triage Classifier** and **Repair Agent** in Agent Builder
+(grounded sources, output schema, eval set with a release gate) and `uip agent
+publish`, register the deterministic scorer as a coded agent (`uip codedagent
+init/publish`), open the validated **Maestro BPMN** in
+[`flakewarden-maestro/`](flakewarden-maestro/), then pack/publish/deploy
+(`uip solution pack/publish/deploy`) and assign the **Action Center** human-review
+queue. The time-boxed version is in [`docs/deploy-runbook.md`](docs/deploy-runbook.md).
 
 ## Repository layout
 
